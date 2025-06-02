@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Auto Refresh Multi URLs - Pro Enhanced</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.1/sweetalert2.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.1/sweetalert2.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 text-white min-h-screen p-2 sm:p-4 font-sans">
+
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="text-center mb-6 sm:mb-8">
+            <h1 class="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-2">
+                <i class="fas fa-sync-alt mr-2"></i>Auto Refresh Pro
+            </h1>
+            <p class="text-gray-300 text-sm sm:text-base">Gestión avanzada de URLs con auto-refresh personalizado</p>
+        </div>
+
+        <!-- Stats Dashboard -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-6">
+            <div class="bg-gradient-to-r from-green-600 to-green-500 p-3 sm:p-4 rounded-lg text-center">
+                <div class="text-lg sm:text-2xl font-bold" id="totalUrls">0</div>
+                <div class="text-xs sm:text-sm opacity-90">Total URLs</div>
+            </div>
+            <div class="bg-gradient-to-r from-blue-600 to-blue-500 p-3 sm:p-4 rounded-lg text-center">
+                <div class="text-lg sm:text-2xl font-bold" id="activeUrls">0</div>
+                <div class="text-xs sm:text-sm opacity-90">Activas</div>
+            </div>
+            <div class="bg-gradient-to-r from-purple-600 to-purple-500 p-3 sm:p-4 rounded-lg text-center">
+                <div class="text-lg sm:text-2xl font-bold" id="totalRequests">0</div>
+                <div class="text-xs sm:text-sm opacity-90">Requests</div>
+            </div>
+            <div class="bg-gradient-to-r from-yellow-600 to-yellow-500 p-3 sm:p-4 rounded-lg text-center">
+                <div class="text-lg sm:text-2xl font-bold" id="uptime">00:00</div>
+                <div class="text-xs sm:text-sm opacity-90">Tiempo</div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="bg-gray-800/50 backdrop-blur-sm p-4 sm:p-6 rounded-xl shadow-2xl border border-gray-700">
+            
+            <!-- Add URL Section -->
+            <div class="mb-6">
+                <h3 class="text-lg sm:text-xl font-semibold mb-4 flex items-center">
+                    <i class="fas fa-plus-circle mr-2 text-green-400"></i>Agregar Nueva URL
+                </h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <input id="urlInput" type="url" placeholder="https://ejemplo.com"
+                        class="col-span-1 sm:col-span-2 p-3 rounded-lg bg-gray-700/50 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
+                    <input id="intervalInput" type="number" min="1" max="3600" value="30" placeholder="Intervalo (seg)"
+                        class="p-3 rounded-lg bg-gray-700/50 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
+                    <button id="addUrlBtn"
+                        class="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 px-4 py-3 rounded-lg font-semibold transition-all transform hover:scale-105 hover:shadow-lg">
+                        <i class="fas fa-plus mr-2"></i>Agregar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="mb-6 flex flex-wrap gap-2 sm:gap-3">
+                <button id="startAllBtn"
+                    class="bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 px-4 py-2 rounded-lg font-medium transition-all transform hover:scale-105">
+                    <i class="fas fa-play mr-2"></i>Iniciar Todo
+                </button>
+                <button id="stopAllBtn"
+                    class="bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 px-4 py-2 rounded-lg font-medium transition-all transform hover:scale-105">
+                    <i class="fas fa-stop mr-2"></i>Detener Todo
+                </button>
+                <button id="exportBtn"
+                    class="bg-gradient-to-r from-yellow-600 to-yellow-500 hover:from-yellow-700 hover:to-yellow-600 px-4 py-2 rounded-lg font-medium transition-all transform hover:scale-105">
+                    <i class="fas fa-download mr-2"></i>Exportar
+                </button>
+                <button id="importBtn"
+                    class="bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-700 hover:to-indigo-600 px-4 py-2 rounded-lg font-medium transition-all transform hover:scale-105">
+                    <i class="fas fa-upload mr-2"></i>Importar
+                </button>
+                <input type="file" id="importFile" accept=".json" class="hidden">
+            </div>
+
+            <!-- URLs Table -->
+            <div class="overflow-x-auto bg-gray-700/30 rounded-lg border border-gray-600">
+                <table class="w-full min-w-full">
+                    <thead class="bg-gray-700/50">
+                        <tr>
+                            <th class="px-2 sm:px-4 py-3 text-left text-xs sm:text-sm font-medium uppercase tracking-wider">URL</th>
+                            <th class="px-2 sm:px-4 py-3 text-center text-xs sm:text-sm font-medium uppercase tracking-wider">Intervalo</th>
+                            <th class="px-2 sm:px-4 py-3 text-center text-xs sm:text-sm font-medium uppercase tracking-wider">Estado</th>
+                            <th class="px-2 sm:px-4 py-3 text-center text-xs sm:text-sm font-medium uppercase tracking-wider">Requests</th>
+                            <th class="px-2 sm:px-4 py-3 text-center text-xs sm:text-sm font-medium uppercase tracking-wider">Último</th>
+                            <th class="px-2 sm:px-4 py-3 text-center text-xs sm:text-sm font-medium uppercase tracking-wider">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="urlList" class="divide-y divide-gray-600">
+                        <!-- URLs will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="text-center py-12 hidden">
+                <i class="fas fa-link text-6xl text-gray-500 mb-4"></i>
+                <h3 class="text-xl font-medium text-gray-400 mb-2">No hay URLs configuradas</h3>
+                <p class="text-gray-500">Agrega tu primera URL para comenzar</p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center mt-6 text-gray-400 text-sm">
+            <i class="fas fa-heart text-red-500"></i> Desarrollado con tecnología avanzada
+        </div>
+    </div>
+
+    <script>
+        class URLRefresher {
+            constructor() {
+                this.urls = [];
+                this.timers = {};
+                this.stats = {
+                    totalRequests: 0,
+                    startTime: null
+                };
+                this.init();
+            }
+
+            init() {
+                this.loadURLs();
+                this.bindEvents();
+                this.renderList();
+                this.updateStats();
+                this.startUptime();
+            }
+
+            bindEvents() {
+                document.getElementById('addUrlBtn').onclick = () => this.addURL();
+                document.getElementById('startAllBtn').onclick = () => this.startAll();
+                document.getElementById('stopAllBtn').onclick = () => this.stopAll();
+                document.getElementById('exportBtn').onclick = () => this.exportConfig();
+                document.getElementById('importBtn').onclick = () => document.getElementById('importFile').click();
+                document.getElementById('importFile').onchange = (e) => this.importConfig(e);
+                
+                // Enter key support
+                document.getElementById('urlInput').onkeypress = (e) => {
+                    if (e.key === 'Enter') this.addURL();
+                };
+            }
+
+            loadURLs() {
+                try {
+                    const stored = localStorage.getItem('refreshUrls_pro');
+                    if (stored) {
+                        this.urls = JSON.parse(stored);
+                        // Initialize missing properties for existing URLs
+                        this.urls.forEach(url => {
+                            if (!url.requests) url.requests = 0;
+                            if (!url.lastRequest) url.lastRequest = null;
+                            if (!url.status) url.status = 'stopped';
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error loading URLs:', error);
+                    this.urls = [];
+                }
+            }
+
+            saveURLs() {
+                try {
+                    localStorage.setItem('refreshUrls_pro', JSON.stringify(this.urls));
+                } catch (error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error de almacenamiento',
+                        text: 'No se pudo guardar la configuración'
+                    });
+                }
+            }
+
+            async addURL() {
+                const urlInput = document.getElementById('urlInput');
+                const intervalInput = document.getElementById('intervalInput');
+                
+                const url = urlInput.value.trim();
+                const interval = parseInt(intervalInput.value);
+
+                if (!url) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'URL requerida',
+                        text: 'Por favor ingresa una URL válida'
+                    });
+                    return;
+                }
+
+                if (!this.isValidURL(url)) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'URL inválida',
+                        text: 'Por favor ingresa una URL válida (debe incluir http:// o https://)'
+                    });
+                    return;
+                }
+
+                if (interval < 1 || interval > 3600) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Intervalo inválido',
+                        text: 'El intervalo debe estar entre 1 y 3600 segundos'
+                    });
+                    return;
+                }
+
+                if (this.urls.some(u => u.url === url)) {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'URL duplicada',
+                        text: 'Esta URL ya existe en la lista'
+                    });
+                    return;
+                }
+
+                const urlObj = {
+                    id: Date.now(),
+                    url: url,
+                    interval: interval,
+                    status: 'stopped',
+                    requests: 0,
+                    lastRequest: null
+                };
+
+                this.urls.push(urlObj);
+                this.saveURLs();
+                this.renderList();
+                this.updateStats();
+
+                // Clear inputs
+                urlInput.value = '';
+                intervalInput.value = '30';
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'URL agregada',
+                    text: 'La URL se agregó correctamente',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+            }
+
+            isValidURL(string) {
+                try {
+                    new URL(string);
+                    return true;
+                } catch (_) {
+                    return false;
+                }
+            }
+
+            renderList() {
+                const tbody = document.getElementById('urlList');
+                const emptyState = document.getElementById('emptyState');
+                
+                if (this.urls.length === 0) {
+                    tbody.innerHTML = '';
+                    emptyState.classList.remove('hidden');
+                    return;
+                }
+
+                emptyState.classList.add('hidden');
+                tbody.innerHTML = '';
+
+                this.urls.forEach((urlObj, index) => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-gray-700/30 transition-colors';
+
+                    // URL column
+                    const tdUrl = document.createElement('td');
+                    tdUrl.className = 'px-2 sm:px-4 py-3';
+                    tdUrl.innerHTML = `
+                        <div class="flex items-center">
+                            <i class="fas fa-link text-blue-400 mr-2"></i>
+                            <div>
+                                <div class="text-sm font-medium break-all">${urlObj.url}</div>
+                                <div class="text-xs text-gray-400">ID: ${urlObj.id}</div>
+                            </div>
+                        </div>
+                    `;
+
+                    // Interval column
+                    const tdInterval = document.createElement('td');
+                    tdInterval.className = 'px-2 sm:px-4 py-3 text-center';
+                    const intervalInput = document.createElement('input');
+                    intervalInput.type = 'number';
+                    intervalInput.min = 1;
+                    intervalInput.max = 3600;
+                    intervalInput.value = urlObj.interval;
+                    intervalInput.className = 'w-16 sm:w-20 p-1 sm:p-2 rounded bg-gray-600 text-white text-center text-sm border border-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500';
+                    intervalInput.onchange = () => {
+                        urlObj.interval = parseInt(intervalInput.value);
+                        this.saveURLs();
+                        if (urlObj.status === 'active') {
+                            this.stopRefreshing(urlObj.id);
+                            this.startRefreshing(urlObj.id);
+                        }
+                    };
+                    tdInterval.appendChild(intervalInput);
+
+                    // Status column
+                    const tdStatus = document.createElement('td');
+                    tdStatus.className = 'px-2 sm:px-4 py-3 text-center';
+                    const statusBadge = document.createElement('span');
+                    statusBadge.className = `px-2 py-1 rounded-full text-xs font-medium ${
+                        urlObj.status === 'active' 
+                            ? 'bg-green-600 text-white' 
+                            : 'bg-gray-600 text-gray-300'
+                    }`;
+                    statusBadge.textContent = urlObj.status === 'active' ? 'Activa' : 'Detenida';
+                    statusBadge.id = `status-${urlObj.id}`;
+                    tdStatus.appendChild(statusBadge);
+
+                    // Requests column
+                    const tdRequests = document.createElement('td');
+                    tdRequests.className = 'px-2 sm:px-4 py-3 text-center text-sm';
+                    tdRequests.innerHTML = `<span id="requests-${urlObj.id}" class="font-bold text-blue-400">${urlObj.requests}</span>`;
+
+                    // Last request column
+                    const tdLast = document.createElement('td');
+                    tdLast.className = 'px-2 sm:px-4 py-3 text-center text-xs text-gray-400';
+                    tdLast.innerHTML = `<span id="last-${urlObj.id}">${urlObj.lastRequest ? this.formatTime(urlObj.lastRequest) : 'Nunca'}</span>`;
+
+                    // Actions column
+                    const tdActions = document.createElement('td');
+                    tdActions.className = 'px-2 sm:px-4 py-3 text-center';
+                    
+                    const btnGroup = document.createElement('div');
+                    btnGroup.className = 'flex flex-wrap justify-center gap-1';
+
+                    const btnStart = document.createElement('button');
+                    btnStart.innerHTML = '<i class="fas fa-play"></i>';
+                    btnStart.className = 'bg-green-600 hover:bg-green-700 px-2 py-1 rounded text-xs transition-all';
+                    btnStart.id = `btn-start-${urlObj.id}`;
+                    btnStart.disabled = urlObj.status === 'active';
+                    btnStart.onclick = () => {
+                        this.startRefreshing(urlObj.id);
+                        this.renderList(); // Re-renderizar para actualizar estados de botones
+                    };
+
+                    const btnStop = document.createElement('button');
+                    btnStop.innerHTML = '<i class="fas fa-stop"></i>';
+                    btnStop.className = 'bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-xs transition-all';
+                    btnStop.id = `btn-stop-${urlObj.id}`;
+                    btnStop.disabled = urlObj.status !== 'active';
+                    btnStop.onclick = () => {
+                        this.stopRefreshing(urlObj.id);
+                        this.renderList(); // Re-renderizar para actualizar estados de botones
+                    };
+
+                    const btnEdit = document.createElement('button');
+                    btnEdit.innerHTML = '<i class="fas fa-edit"></i>';
+                    btnEdit.className = 'bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded text-xs transition-all';
+                    btnEdit.onclick = () => this.editURL(urlObj.id);
+
+                    const btnDelete = document.createElement('button');
+                    btnDelete.innerHTML = '<i class="fas fa-trash"></i>';
+                    btnDelete.className = 'bg-red-500 hover:bg-red-600 px-2 py-1 rounded text-xs transition-all';
+                    btnDelete.onclick = () => this.deleteURL(urlObj.id);
+
+                    btnGroup.appendChild(btnStart);
+                    btnGroup.appendChild(btnStop);
+                    btnGroup.appendChild(btnEdit);
+                    btnGroup.appendChild(btnDelete);
+                    tdActions.appendChild(btnGroup);
+
+                    tr.appendChild(tdUrl);
+                    tr.appendChild(tdInterval);
+                    tr.appendChild(tdStatus);
+                    tr.appendChild(tdRequests);
+                    tr.appendChild(tdLast);
+                    tr.appendChild(tdActions);
+                    tbody.appendChild(tr);
+                });
+            }
+
+            startRefreshing(id) {
+                const urlObj = this.urls.find(u => u.id === id);
+                if (!urlObj || urlObj.status === 'active') return;
+
+                if (!this.stats.startTime) {
+                    this.stats.startTime = Date.now();
+                }
+
+                urlObj.status = 'active';
+                this.timers[id] = setInterval(async () => {
+                    try {
+                        await fetch(urlObj.url, { 
+                            method: 'GET', 
+                            mode: 'no-cors',
+                            cache: 'no-cache'
+                        });
+                        urlObj.requests++;
+                        urlObj.lastRequest = Date.now();
+                        this.stats.totalRequests++;
+                        this.updateURLDisplay(id);
+                        this.updateStats();
+                    } catch (error) {
+                        console.warn(`Error refreshing ${urlObj.url}:`, error);
+                    }
+                }, urlObj.interval * 1000);
+
+                this.saveURLs();
+                this.updateURLDisplay(id);
+                this.updateStats();
+            }
+
+            stopRefreshing(id) {
+                const urlObj = this.urls.find(u => u.id === id);
+                if (!urlObj) return;
+
+                if (this.timers[id]) {
+                    clearInterval(this.timers[id]);
+                    delete this.timers[id];
+                }
+
+                urlObj.status = 'stopped';
+                this.saveURLs();
+                this.updateURLDisplay(id);
+                this.updateStats();
+            }
+
+            
+        updateURLDisplay(id) {
+            const urlObj = this.urls.find(u => u.id === id);
+            if (!urlObj) return;
+
+            const statusEl = document.getElementById(`status-${id}`);
+            const requestsEl = document.getElementById(`requests-${id}`);
+            const lastEl = document.getElementById(`last-${id}`);
+            const btnStart = document.getElementById(`btn-start-${id}`);
+            const btnStop = document.getElementById(`btn-stop-${id}`);
+
+            if (statusEl) {
+                statusEl.className = `px-2 py-1 rounded-full text-xs font-medium ${
+                    urlObj.status === 'active' 
+                        ? 'bg-green-600 text-white' 
+                        : 'bg-gray-600 text-gray-300'
+                }`;
+                statusEl.textContent = urlObj.status === 'active' ? 'Activa' : 'Detenida';
+            }
+
+            if (requestsEl) {
+                requestsEl.textContent = urlObj.requests;
+            }
+
+            if (lastEl) {
+                lastEl.textContent = urlObj.lastRequest ? this.formatTime(urlObj.lastRequest) : 'Nunca';
+            }
+
+            // Actualizar estado de los botones
+            if (btnStart) {
+                btnStart.disabled = urlObj.status === 'active';
+            }
+            
+            if (btnStop) {
+                btnStop.disabled = urlObj.status !== 'active';
+            }
+        }
+
+            async editURL(id) {
+                const urlObj = this.urls.find(u => u.id === id);
+                if (!urlObj) return;
+
+                const { value: formValues } = await Swal.fire({
+                    title: 'Editar URL',
+                    html: `
+                        <div class="text-left space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-2">URL:</label>
+                                <input id="swal-url" class="w-full p-2 border rounded" value="${urlObj.url}" type="url">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Intervalo (segundos):</label>
+                                <input id="swal-interval" class="w-full p-2 border rounded" value="${urlObj.interval}" type="number" min="1" max="3600">
+                            </div>
+                        </div>
+                    `,
+                    focusConfirm: false,
+                    showCancelButton: true,
+                    confirmButtonText: 'Guardar',
+                    cancelButtonText: 'Cancelar',
+                    preConfirm: () => {
+                        const url = document.getElementById('swal-url').value;
+                        const interval = parseInt(document.getElementById('swal-interval').value);
+                        
+                        if (!url || !this.isValidURL(url)) {
+                            Swal.showValidationMessage('URL inválida');
+                            return false;
+                        }
+                        
+                        if (interval < 1 || interval > 3600) {
+                            Swal.showValidationMessage('Intervalo debe estar entre 1 y 3600 segundos');
+                            return false;
+                        }
+                        
+                        return { url, interval };
+                    }
+                });
+
+                if (formValues) {
+                    const wasActive = urlObj.status === 'active';
+                    if (wasActive) {
+                        this.stopRefreshing(id);
+                    }
+
+                    urlObj.url = formValues.url;
+                    urlObj.interval = formValues.interval;
+                    
+                    this.saveURLs();
+                    this.renderList();
+                    
+                    if (wasActive) {
+                        this.startRefreshing(id);
+                    }
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'URL actualizada',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                }
+            }
+
+            async deleteURL(id) {
+                const result = await Swal.fire({
+                    title: '¿Eliminar URL?',
+                    text: 'Esta acción no se puede deshacer',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Sí, eliminar',
+                    cancelButtonText: 'Cancelar'
+                });
+
+                if (result.isConfirmed) {
+                    this.stopRefreshing(id);
+                    this.urls = this.urls.filter(u => u.id !== id);
+                    this.saveURLs();
+                    this.renderList();
+                    this.updateStats();
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'URL eliminada',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                }
+            }
+
+            startAll() {
+                if (this.urls.length === 0) {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'No hay URLs',
+                        text: 'Agrega algunas URLs primero'
+                    });
+                    return;
+                }
+
+                this.urls.forEach(urlObj => {
+                    if (urlObj.status !== 'active') {
+                        this.startRefreshing(urlObj.id);
+                    }
+                });
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Todas las URLs iniciadas',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+            }
+
+            stopAll() {
+                Object.keys(this.timers).forEach(id => {
+                    this.stopRefreshing(parseInt(id));
+                });
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Todas las URLs detenidas',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+            }
+
+            exportConfig() {
+                if (this.urls.length === 0) {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'No hay URLs',
+                        text: 'No hay configuración para exportar'
+                    });
+                    return;
+                }
+
+                const config = {
+                    version: '2.0',
+                    exported: new Date().toISOString(),
+                    urls: this.urls,
+                    stats: this.stats
+                };
+
+                const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `url-refresher-config-${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Configuración exportada',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+            }
+
+            async importConfig(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                try {
+                    const text = await file.text();
+                    const config = JSON.parse(text);
+
+                    if (!config.urls || !Array.isArray(config.urls)) {
+                        throw new Error('Formato de archivo inválido');
+                    }
+
+                    const result = await Swal.fire({
+                        title: '¿Importar configuración?',
+                        text: `Se importarán ${config.urls.length} URLs. ¿Deseas reemplazar la configuración actual?`,
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonText: 'Importar',
+                        cancelButtonText: 'Cancelar'
+                    });
+
+                    if (result.isConfirmed) {
+                        // Stop all current timers
+                        this.stopAll();
+                        
+                        // Import URLs with new IDs to avoid conflicts
+                        this.urls = config.urls.map(url => ({
+                            ...url,
+                            id: Date.now() + Math.random(),
+                            status: 'stopped',
+                            requests: url.requests || 0,
+                            lastRequest: url.lastRequest || null
+                        }));
+
+                        this.saveURLs();
+                        this.renderList();
+                        this.updateStats();
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Configuración importada',
+                            text: `${config.urls.length} URLs importadas correctamente`,
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                    }
+                } catch (error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error de importación',
+                        text: 'No se pudo importar el archivo. Verifica que sea un archivo válido.'
+                    });
+                }
+
+                // Clear the file input
+                event.target.value = '';
+            }
+
+            updateStats() {
+                document.getElementById('totalUrls').textContent = this.urls.length;
+                document.getElementById('activeUrls').textContent = this.urls.filter(u => u.status === 'active').length;
+                document.getElementById('totalRequests').textContent = this.stats.totalRequests;
+            }
+
+            startUptime() {
+                setInterval(() => {
+                    if (this.stats.startTime && this.urls.some(u => u.status === 'active')) {
+                        const uptime = Date.now() - this.stats.startTime;
+                        document.getElementById('uptime').textContent = this.formatUptime(uptime);
+                    } else if (!this.urls.some(u => u.status === 'active')) {
+                        document.getElementById('uptime').textContent = '00:00';
+                    }
+                }, 1000);
+            }
+
+            formatUptime(ms) {
+                const seconds = Math.floor(ms / 1000);
+                const minutes = Math.floor(seconds / 60);
+                const hours = Math.floor(minutes / 60);
+                
+                if (hours > 0) {
+                    return `${hours.toString().padStart(2, '0')}:${(minutes % 60).toString().padStart(2, '0')}:${(seconds % 60).toString().padStart(2, '0')}`;
+                } else {
+                    return `${minutes.toString().padStart(2, '0')}:${(seconds % 60).toString().padStart(2, '0')}`;
+                }
+            }
+
+            formatTime(timestamp) {
+                const date = new Date(timestamp);
+                return date.toLocaleTimeString('es-ES', { 
+                    hour: '2-digit', 
+                    minute: '2-digit', 
+                    second: '2-digit' 
+                });
+            }
+        }
+
+        // Initialize the application
+        const refresher = new URLRefresher();
+
+        // Prevent page unload if there are active refreshers
+        window.addEventListener('beforeunload', (e) => {
+            const activeCount = refresher.urls.filter(u => u.status === 'active').length;
+            if (activeCount > 0) {
+                e.preventDefault();
+                e.returnValue = `Tienes ${activeCount} URLs activas. ¿Estás seguro de que quieres salir?`;
+            }
+        });
+
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                switch (e.key) {
+                    case 's':
+                        e.preventDefault();
+                        refresher.exportConfig();
+                        break;
+                    case 'o':
+                        e.preventDefault();
+                        document.getElementById('importFile').click();
+                        break;
+                    case 'Enter':
+                        if (e.target.id === 'urlInput') {
+                            e.preventDefault();
+                            refresher.addURL();
+                        }
+                        break;
+                }
+            }
+        });
+
+        // Add visual feedback for network status
+        window.addEventListener('online', () => {
+            Swal.fire({
+                icon: 'success',
+                title: 'Conexión restaurada',
+                text: 'La conexión a internet se ha restaurado',
+                timer: 2000,
+                showConfirmButton: false,
+                position: 'top-end',
+                toast: true
+            });
+        });
+
+        window.addEventListener('offline', () => {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Sin conexión',
+                text: 'Se ha perdido la conexión a internet',
+                timer: 3000,
+                showConfirmButton: false,
+                position: 'top-end',
+                toast: true
+            });
+        });
+    </script>
+
+</body>
+
+</html>
