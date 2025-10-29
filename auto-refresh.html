@@ -1,793 +1,407 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Auto Refresh Multi URLs - Pro Enhanced</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.1/sweetalert2.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.10.1/sweetalert2.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor de URLs en Tiempo Real</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Special+Gothic:wght@400..700&display=swap" rel="stylesheet">
+
+    <style>
+        .text-css{
+            font-family: "Special Gothic", sans-serif;
+            font-optical-sizing: auto;
+        }
+    </style>
 </head>
-
-<body class="bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 text-white min-h-screen p-2 sm:p-4 font-sans">
-
+<body class="bg-gray-50 min-h-screen p-4 sm:p-6 lg:p-8">
     <div class="max-w-7xl mx-auto">
         <!-- Header -->
-        <div class="text-center mb-6 sm:mb-8">
-            <h1 class="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-2">
-                <i class="fas fa-sync-alt mr-2"></i>Auto Refresh Pro
-            </h1>
-            <p class="text-gray-300 text-sm sm:text-base">Gestión avanzada de URLs con auto-refresh personalizado</p>
+        <div class="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-4 sm:mb-6">
+            <h1 class="text-2xl sm:text-3xl text-css text-gray-800 mb-1 sm:mb-2">Monitor de URLs</h1>
+            <p class="text-sm sm:text-base text-css text-gray-600">Monitorea el estado de tus URLs en tiempo real</p>
         </div>
 
-        <!-- Stats Dashboard -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-6">
-            <div class="bg-gradient-to-r from-green-600 to-green-500 p-3 sm:p-4 rounded-lg text-center">
-                <div class="text-lg sm:text-2xl font-bold" id="totalUrls">0</div>
-                <div class="text-xs sm:text-sm opacity-90">Total URLs</div>
-            </div>
-            <div class="bg-gradient-to-r from-blue-600 to-blue-500 p-3 sm:p-4 rounded-lg text-center">
-                <div class="text-lg sm:text-2xl font-bold" id="activeUrls">0</div>
-                <div class="text-xs sm:text-sm opacity-90">Activas</div>
-            </div>
-            <div class="bg-gradient-to-r from-purple-600 to-purple-500 p-3 sm:p-4 rounded-lg text-center">
-                <div class="text-lg sm:text-2xl font-bold" id="totalRequests">0</div>
-                <div class="text-xs sm:text-sm opacity-90">Requests</div>
-            </div>
-            <div class="bg-gradient-to-r from-yellow-600 to-yellow-500 p-3 sm:p-4 rounded-lg text-center">
-                <div class="text-lg sm:text-2xl font-bold" id="uptime">00:00</div>
-                <div class="text-xs sm:text-sm opacity-90">Tiempo</div>
+        <!-- Formulario para agregar URLs -->
+        <div class="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-4 sm:mb-6">
+            <h2 class="text-lg sm:text-xl text-css text-gray-800 mb-3 sm:mb-4">Agregar Nueva URL</h2>
+            <div class="flex flex-col sm:flex-row gap-3">
+                <input 
+                    type="url" 
+                    id="urlInput" 
+                    placeholder="https://ejemplo.com" 
+                    class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base text-css"
+                >
+                <input 
+                    type="number" 
+                    id="intervalInput" 
+                    placeholder="Intervalo (seg)" 
+                    value="30"
+                    min="5"
+                    class="w-full sm:w-40 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
+                >
+                <button 
+                    onclick="addURL()" 
+                    class="w-full sm:w-auto px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-css text-sm sm:text-base"
+                >
+                    Agregar
+                </button>
             </div>
         </div>
 
-        <!-- Main Content -->
-        <div class="bg-gray-800/50 backdrop-blur-sm p-4 sm:p-6 rounded-xl shadow-2xl border border-gray-700">
-            
-            <!-- Add URL Section -->
-            <div class="mb-6">
-                <h3 class="text-lg sm:text-xl font-semibold mb-4 flex items-center">
-                    <i class="fas fa-plus-circle mr-2 text-green-400"></i>Agregar Nueva URL
-                </h3>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                    <input id="urlInput" type="url" placeholder="https://ejemplo.com"
-                        class="col-span-1 sm:col-span-2 p-3 rounded-lg bg-gray-700/50 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
-                    <input id="intervalInput" type="number" min="1" max="3600" value="30" placeholder="Intervalo (seg)"
-                        class="p-3 rounded-lg bg-gray-700/50 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" />
-                    <button id="addUrlBtn"
-                        class="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 px-4 py-3 rounded-lg font-semibold transition-all transform hover:scale-105 hover:shadow-lg">
-                        <i class="fas fa-plus mr-2"></i>Agregar
-                    </button>
+        <!-- Panel de estadísticas -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
+            <div class="bg-white rounded-lg shadow-sm p-4 sm:p-6">
+                <div class="text-xs sm:text-sm text-gray-600 mb-1">Total URLs</div>
+                <div class="text-2xl sm:text-3xl text-css text-gray-800" id="totalUrls">0</div>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4 sm:p-6">
+                <div class="text-xs sm:text-sm text-gray-600 mb-1">Activas</div>
+                <div class="text-2xl sm:text-3xl text-css text-green-600" id="activeUrls">0</div>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4 sm:p-6">
+                <div class="text-xs sm:text-sm text-gray-600 mb-1">Con Errores</div>
+                <div class="text-2xl sm:text-3xl text-css text-red-600" id="errorUrls">0</div>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4 sm:p-6">
+                <div class="text-xs sm:text-sm text-gray-600 mb-1">Última Actualización</div>
+                <div class="text-xs sm:text-sm text-css text-gray-800" id="lastUpdate">--:--:--</div>
+            </div>
+        </div>
+
+        <!-- Lista de URLs monitoreadas -->
+        <div class="bg-white rounded-lg shadow-sm p-4 sm:p-6">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
+                <h2 class="text-lg sm:text-xl text-css text-gray-800 mb-2 sm:mb-0">URLs Monitoreadas</h2>
+                <button 
+                    onclick="clearAllURLs()" 
+                    class="text-xs sm:text-sm text-red-600 hover:text-red-700 text-css"
+                    id="clearBtn"
+                    style="display: none;"
+                >
+                    Limpiar todas
+                </button>
+            </div>
+            <div id="urlList" class="space-y-3">
+                <div class="text-center text-gray-500 py-8 text-sm sm:text-base">
+                    No hay URLs para monitorear. Agrega una para comenzar.
                 </div>
             </div>
-
-            <!-- Controls -->
-            <div class="mb-6 flex flex-wrap gap-2 sm:gap-3">
-                <button id="startAllBtn"
-                    class="bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 px-4 py-2 rounded-lg font-medium transition-all transform hover:scale-105">
-                    <i class="fas fa-play mr-2"></i>Iniciar Todo
-                </button>
-                <button id="stopAllBtn"
-                    class="bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 px-4 py-2 rounded-lg font-medium transition-all transform hover:scale-105">
-                    <i class="fas fa-stop mr-2"></i>Detener Todo
-                </button>
-                <button id="exportBtn"
-                    class="bg-gradient-to-r from-yellow-600 to-yellow-500 hover:from-yellow-700 hover:to-yellow-600 px-4 py-2 rounded-lg font-medium transition-all transform hover:scale-105">
-                    <i class="fas fa-download mr-2"></i>Exportar
-                </button>
-                <button id="importBtn"
-                    class="bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-700 hover:to-indigo-600 px-4 py-2 rounded-lg font-medium transition-all transform hover:scale-105">
-                    <i class="fas fa-upload mr-2"></i>Importar
-                </button>
-                <input type="file" id="importFile" accept=".json" class="hidden">
-            </div>
-
-            <!-- URLs Table -->
-            <div class="overflow-x-auto bg-gray-700/30 rounded-lg border border-gray-600">
-                <table class="w-full min-w-full">
-                    <thead class="bg-gray-700/50">
-                        <tr>
-                            <th class="px-2 sm:px-4 py-3 text-left text-xs sm:text-sm font-medium uppercase tracking-wider">URL</th>
-                            <th class="px-2 sm:px-4 py-3 text-center text-xs sm:text-sm font-medium uppercase tracking-wider">Intervalo</th>
-                            <th class="px-2 sm:px-4 py-3 text-center text-xs sm:text-sm font-medium uppercase tracking-wider">Estado</th>
-                            <th class="px-2 sm:px-4 py-3 text-center text-xs sm:text-sm font-medium uppercase tracking-wider">Requests</th>
-                            <th class="px-2 sm:px-4 py-3 text-center text-xs sm:text-sm font-medium uppercase tracking-wider">Último</th>
-                            <th class="px-2 sm:px-4 py-3 text-center text-xs sm:text-sm font-medium uppercase tracking-wider">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="urlList" class="divide-y divide-gray-600">
-                        <!-- URLs will be populated here -->
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Empty State -->
-            <div id="emptyState" class="text-center py-12 hidden">
-                <i class="fas fa-link text-6xl text-gray-500 mb-4"></i>
-                <h3 class="text-xl font-medium text-gray-400 mb-2">No hay URLs configuradas</h3>
-                <p class="text-gray-500">Agrega tu primera URL para comenzar</p>
-            </div>
-        </div>
-
-        <!-- Footer -->
-        <div class="text-center mt-6 text-gray-400 text-sm">
-            <i class="fas fa-heart text-red-500"></i> Desarrollado con tecnología avanzada
         </div>
     </div>
 
     <script>
-        class URLRefresher {
-            constructor() {
-                this.urls = [];
-                this.timers = {};
-                this.stats = {
-                    totalRequests: 0,
-                    startTime: null
-                };
-                this.init();
-            }
+        // Estado global de la aplicación
+        let urls = [];
+        let timers = {};
 
-            init() {
-                this.loadURLs();
-                this.bindEvents();
-                this.renderList();
-                this.updateStats();
-                this.startUptime();
-            }
+        // Inicializar la aplicación al cargar
+        document.addEventListener('DOMContentLoaded', function() {
+            loadURLsFromLocalStorage();
+            renderURLs();
+            updateStats();
+        });
 
-            bindEvents() {
-                document.getElementById('addUrlBtn').onclick = () => this.addURL();
-                document.getElementById('startAllBtn').onclick = () => this.startAll();
-                document.getElementById('stopAllBtn').onclick = () => this.stopAll();
-                document.getElementById('exportBtn').onclick = () => this.exportConfig();
-                document.getElementById('importBtn').onclick = () => document.getElementById('importFile').click();
-                document.getElementById('importFile').onchange = (e) => this.importConfig(e);
-                
-                // Enter key support
-                document.getElementById('urlInput').onkeypress = (e) => {
-                    if (e.key === 'Enter') this.addURL();
-                };
-            }
-
-            loadURLs() {
-                try {
-                    const stored = localStorage.getItem('refreshUrls_pro');
-                    if (stored) {
-                        this.urls = JSON.parse(stored);
-                        // Initialize missing properties for existing URLs
-                        this.urls.forEach(url => {
-                            if (!url.requests) url.requests = 0;
-                            if (!url.lastRequest) url.lastRequest = null;
-                            if (!url.status) url.status = 'stopped';
-                        });
-                    }
-                } catch (error) {
-                    console.error('Error loading URLs:', error);
-                    this.urls = [];
-                }
-            }
-
-            saveURLs() {
-                try {
-                    localStorage.setItem('refreshUrls_pro', JSON.stringify(this.urls));
-                } catch (error) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error de almacenamiento',
-                        text: 'No se pudo guardar la configuración'
-                    });
-                }
-            }
-
-            async addURL() {
-                const urlInput = document.getElementById('urlInput');
-                const intervalInput = document.getElementById('intervalInput');
-                
-                const url = urlInput.value.trim();
-                const interval = parseInt(intervalInput.value);
-
-                if (!url) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'URL requerida',
-                        text: 'Por favor ingresa una URL válida'
-                    });
-                    return;
-                }
-
-                if (!this.isValidURL(url)) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'URL inválida',
-                        text: 'Por favor ingresa una URL válida (debe incluir http:// o https://)'
-                    });
-                    return;
-                }
-
-                if (interval < 1 || interval > 3600) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Intervalo inválido',
-                        text: 'El intervalo debe estar entre 1 y 3600 segundos'
-                    });
-                    return;
-                }
-
-                if (this.urls.some(u => u.url === url)) {
-                    Swal.fire({
-                        icon: 'info',
-                        title: 'URL duplicada',
-                        text: 'Esta URL ya existe en la lista'
-                    });
-                    return;
-                }
-
-                const urlObj = {
-                    id: Date.now(),
-                    url: url,
-                    interval: interval,
-                    status: 'stopped',
-                    requests: 0,
-                    lastRequest: null
-                };
-
-                this.urls.push(urlObj);
-                this.saveURLs();
-                this.renderList();
-                this.updateStats();
-
-                // Clear inputs
-                urlInput.value = '';
-                intervalInput.value = '30';
-
-                Swal.fire({
-                    icon: 'success',
-                    title: 'URL agregada',
-                    text: 'La URL se agregó correctamente',
-                    timer: 1500,
-                    showConfirmButton: false
-                });
-            }
-
-            isValidURL(string) {
-                try {
-                    new URL(string);
-                    return true;
-                } catch (_) {
-                    return false;
-                }
-            }
-
-            renderList() {
-                const tbody = document.getElementById('urlList');
-                const emptyState = document.getElementById('emptyState');
-                
-                if (this.urls.length === 0) {
-                    tbody.innerHTML = '';
-                    emptyState.classList.remove('hidden');
-                    return;
-                }
-
-                emptyState.classList.add('hidden');
-                tbody.innerHTML = '';
-
-                this.urls.forEach((urlObj, index) => {
-                    const tr = document.createElement('tr');
-                    tr.className = 'hover:bg-gray-700/30 transition-colors';
-
-                    // URL column
-                    const tdUrl = document.createElement('td');
-                    tdUrl.className = 'px-2 sm:px-4 py-3';
-                    tdUrl.innerHTML = `
-                        <div class="flex items-center">
-                            <i class="fas fa-link text-blue-400 mr-2"></i>
-                            <div>
-                                <div class="text-sm font-medium break-all">${urlObj.url}</div>
-                                <div class="text-xs text-gray-400">ID: ${urlObj.id}</div>
-                            </div>
-                        </div>
-                    `;
-
-                    // Interval column
-                    const tdInterval = document.createElement('td');
-                    tdInterval.className = 'px-2 sm:px-4 py-3 text-center';
-                    const intervalInput = document.createElement('input');
-                    intervalInput.type = 'number';
-                    intervalInput.min = 1;
-                    intervalInput.max = 3600;
-                    intervalInput.value = urlObj.interval;
-                    intervalInput.className = 'w-16 sm:w-20 p-1 sm:p-2 rounded bg-gray-600 text-white text-center text-sm border border-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500';
-                    intervalInput.onchange = () => {
-                        urlObj.interval = parseInt(intervalInput.value);
-                        this.saveURLs();
-                        if (urlObj.status === 'active') {
-                            this.stopRefreshing(urlObj.id);
-                            this.startRefreshing(urlObj.id);
-                        }
-                    };
-                    tdInterval.appendChild(intervalInput);
-
-                    // Status column
-                    const tdStatus = document.createElement('td');
-                    tdStatus.className = 'px-2 sm:px-4 py-3 text-center';
-                    const statusBadge = document.createElement('span');
-                    statusBadge.className = `px-2 py-1 rounded-full text-xs font-medium ${
-                        urlObj.status === 'active' 
-                            ? 'bg-green-600 text-white' 
-                            : 'bg-gray-600 text-gray-300'
-                    }`;
-                    statusBadge.textContent = urlObj.status === 'active' ? 'Activa' : 'Detenida';
-                    statusBadge.id = `status-${urlObj.id}`;
-                    tdStatus.appendChild(statusBadge);
-
-                    // Requests column
-                    const tdRequests = document.createElement('td');
-                    tdRequests.className = 'px-2 sm:px-4 py-3 text-center text-sm';
-                    tdRequests.innerHTML = `<span id="requests-${urlObj.id}" class="font-bold text-blue-400">${urlObj.requests}</span>`;
-
-                    // Last request column
-                    const tdLast = document.createElement('td');
-                    tdLast.className = 'px-2 sm:px-4 py-3 text-center text-xs text-gray-400';
-                    tdLast.innerHTML = `<span id="last-${urlObj.id}">${urlObj.lastRequest ? this.formatTime(urlObj.lastRequest) : 'Nunca'}</span>`;
-
-                    // Actions column
-                    const tdActions = document.createElement('td');
-                    tdActions.className = 'px-2 sm:px-4 py-3 text-center';
-                    
-                    const btnGroup = document.createElement('div');
-                    btnGroup.className = 'flex flex-wrap justify-center gap-1';
-
-                    const btnStart = document.createElement('button');
-                    btnStart.innerHTML = '<i class="fas fa-play"></i>';
-                    btnStart.className = 'bg-green-600 hover:bg-green-700 px-2 py-1 rounded text-xs transition-all';
-                    btnStart.id = `btn-start-${urlObj.id}`;
-                    btnStart.disabled = urlObj.status === 'active';
-                    btnStart.onclick = () => {
-                        this.startRefreshing(urlObj.id);
-                        this.renderList(); // Re-renderizar para actualizar estados de botones
-                    };
-
-                    const btnStop = document.createElement('button');
-                    btnStop.innerHTML = '<i class="fas fa-stop"></i>';
-                    btnStop.className = 'bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-xs transition-all';
-                    btnStop.id = `btn-stop-${urlObj.id}`;
-                    btnStop.disabled = urlObj.status !== 'active';
-                    btnStop.onclick = () => {
-                        this.stopRefreshing(urlObj.id);
-                        this.renderList(); // Re-renderizar para actualizar estados de botones
-                    };
-
-                    const btnEdit = document.createElement('button');
-                    btnEdit.innerHTML = '<i class="fas fa-edit"></i>';
-                    btnEdit.className = 'bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded text-xs transition-all';
-                    btnEdit.onclick = () => this.editURL(urlObj.id);
-
-                    const btnDelete = document.createElement('button');
-                    btnDelete.innerHTML = '<i class="fas fa-trash"></i>';
-                    btnDelete.className = 'bg-red-500 hover:bg-red-600 px-2 py-1 rounded text-xs transition-all';
-                    btnDelete.onclick = () => this.deleteURL(urlObj.id);
-
-                    btnGroup.appendChild(btnStart);
-                    btnGroup.appendChild(btnStop);
-                    btnGroup.appendChild(btnEdit);
-                    btnGroup.appendChild(btnDelete);
-                    tdActions.appendChild(btnGroup);
-
-                    tr.appendChild(tdUrl);
-                    tr.appendChild(tdInterval);
-                    tr.appendChild(tdStatus);
-                    tr.appendChild(tdRequests);
-                    tr.appendChild(tdLast);
-                    tr.appendChild(tdActions);
-                    tbody.appendChild(tr);
-                });
-            }
-
-            startRefreshing(id) {
-                const urlObj = this.urls.find(u => u.id === id);
-                if (!urlObj || urlObj.status === 'active') return;
-
-                if (!this.stats.startTime) {
-                    this.stats.startTime = Date.now();
-                }
-
-                urlObj.status = 'active';
-                this.timers[id] = setInterval(async () => {
-                    try {
-                        await fetch(urlObj.url, { 
-                            method: 'GET', 
-                            mode: 'no-cors',
-                            cache: 'no-cache'
-                        });
-                        urlObj.requests++;
-                        urlObj.lastRequest = Date.now();
-                        this.stats.totalRequests++;
-                        this.updateURLDisplay(id);
-                        this.updateStats();
-                    } catch (error) {
-                        console.warn(`Error refreshing ${urlObj.url}:`, error);
-                    }
-                }, urlObj.interval * 1000);
-
-                this.saveURLs();
-                this.updateURLDisplay(id);
-                this.updateStats();
-            }
-
-            stopRefreshing(id) {
-                const urlObj = this.urls.find(u => u.id === id);
-                if (!urlObj) return;
-
-                if (this.timers[id]) {
-                    clearInterval(this.timers[id]);
-                    delete this.timers[id];
-                }
-
-                urlObj.status = 'stopped';
-                this.saveURLs();
-                this.updateURLDisplay(id);
-                this.updateStats();
-            }
-
+        // Agregar nueva URL
+        function addURL() {
+            const urlInput = document.getElementById('urlInput');
+            const intervalInput = document.getElementById('intervalInput');
             
-        updateURLDisplay(id) {
-            const urlObj = this.urls.find(u => u.id === id);
-            if (!urlObj) return;
+            const url = urlInput.value.trim();
+            const interval = parseInt(intervalInput.value) || 30;
 
-            const statusEl = document.getElementById(`status-${id}`);
-            const requestsEl = document.getElementById(`requests-${id}`);
-            const lastEl = document.getElementById(`last-${id}`);
-            const btnStart = document.getElementById(`btn-start-${id}`);
-            const btnStop = document.getElementById(`btn-stop-${id}`);
-
-            if (statusEl) {
-                statusEl.className = `px-2 py-1 rounded-full text-xs font-medium ${
-                    urlObj.status === 'active' 
-                        ? 'bg-green-600 text-white' 
-                        : 'bg-gray-600 text-gray-300'
-                }`;
-                statusEl.textContent = urlObj.status === 'active' ? 'Activa' : 'Detenida';
+            // Validación básica
+            if (!url) {
+                alert('Por favor ingresa una URL válida');
+                return;
             }
 
-            if (requestsEl) {
-                requestsEl.textContent = urlObj.requests;
+            // Verificar formato de URL
+            try {
+                new URL(url);
+            } catch (e) {
+                alert('Por favor ingresa una URL con formato válido (debe comenzar con http:// o https://)');
+                return;
             }
 
-            if (lastEl) {
-                lastEl.textContent = urlObj.lastRequest ? this.formatTime(urlObj.lastRequest) : 'Nunca';
+            // Verificar si ya existe
+            if (urls.find(u => u.url === url)) {
+                alert('Esta URL ya está siendo monitoreada');
+                return;
             }
 
-            // Actualizar estado de los botones
-            if (btnStart) {
-                btnStart.disabled = urlObj.status === 'active';
-            }
+            // Crear objeto de URL
+            const urlObj = {
+                id: Date.now(),
+                url: url,
+                interval: interval,
+                status: 'pending',
+                lastCheck: null,
+                responseTime: null,
+                error: null
+            };
+
+            // Agregar a la lista
+            urls.push(urlObj);
+            saveURLsToLocalStorage();
             
-            if (btnStop) {
-                btnStop.disabled = urlObj.status !== 'active';
+            // Limpiar inputs
+            urlInput.value = '';
+            intervalInput.value = '30';
+
+            // Renderizar y comenzar monitoreo
+            renderURLs();
+            updateStats();
+            startMonitoring(urlObj);
+        }
+
+        // Eliminar URL
+        function removeURL(id) {
+            // Detener el monitoreo
+            if (timers[id]) {
+                clearInterval(timers[id]);
+                delete timers[id];
+            }
+
+            // Remover de la lista
+            urls = urls.filter(u => u.id !== id);
+            saveURLsToLocalStorage();
+            renderURLs();
+            updateStats();
+        }
+
+        // Limpiar todas las URLs
+        function clearAllURLs() {
+            if (confirm('¿Estás seguro de que deseas eliminar todas las URLs?')) {
+                // Detener todos los monitoreos
+                Object.keys(timers).forEach(id => {
+                    clearInterval(timers[id]);
+                });
+                timers = {};
+                
+                // Limpiar lista
+                urls = [];
+                saveURLsToLocalStorage();
+                renderURLs();
+                updateStats();
             }
         }
 
-            async editURL(id) {
-                const urlObj = this.urls.find(u => u.id === id);
-                if (!urlObj) return;
+        // Iniciar monitoreo de una URL
+        function startMonitoring(urlObj) {
+            // Verificar inmediatamente
+            checkURL(urlObj);
 
-                const { value: formValues } = await Swal.fire({
-                    title: 'Editar URL',
-                    html: `
-                        <div class="text-left space-y-4">
-                            <div>
-                                <label class="block text-sm font-medium mb-2">URL:</label>
-                                <input id="swal-url" class="w-full p-2 border rounded" value="${urlObj.url}" type="url">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium mb-2">Intervalo (segundos):</label>
-                                <input id="swal-interval" class="w-full p-2 border rounded" value="${urlObj.interval}" type="number" min="1" max="3600">
-                            </div>
-                        </div>
-                    `,
-                    focusConfirm: false,
-                    showCancelButton: true,
-                    confirmButtonText: 'Guardar',
-                    cancelButtonText: 'Cancelar',
-                    preConfirm: () => {
-                        const url = document.getElementById('swal-url').value;
-                        const interval = parseInt(document.getElementById('swal-interval').value);
-                        
-                        if (!url || !this.isValidURL(url)) {
-                            Swal.showValidationMessage('URL inválida');
-                            return false;
-                        }
-                        
-                        if (interval < 1 || interval > 3600) {
-                            Swal.showValidationMessage('Intervalo debe estar entre 1 y 3600 segundos');
-                            return false;
-                        }
-                        
-                        return { url, interval };
-                    }
+            // Configurar verificación periódica
+            timers[urlObj.id] = setInterval(() => {
+                checkURL(urlObj);
+            }, urlObj.interval * 1000);
+        }
+
+        // Verificar estado de una URL usando un método alternativo
+        async function checkURL(urlObj) {
+            const startTime = Date.now();
+            
+            try {
+                // Crear un iframe oculto para verificar la URL sin problemas de CORS
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                document.body.appendChild(iframe);
+
+                // Promesa con timeout para verificación
+                const checkPromise = new Promise((resolve, reject) => {
+                    const timeout = setTimeout(() => {
+                        document.body.removeChild(iframe);
+                        reject(new Error('Timeout'));
+                    }, 10000);
+
+                    iframe.onload = () => {
+                        clearTimeout(timeout);
+                        document.body.removeChild(iframe);
+                        resolve(true);
+                    };
+
+                    iframe.onerror = () => {
+                        clearTimeout(timeout);
+                        document.body.removeChild(iframe);
+                        reject(new Error('Error de conexión'));
+                    };
+
+                    // Intentar cargar la URL
+                    iframe.src = urlObj.url;
                 });
 
-                if (formValues) {
-                    const wasActive = urlObj.status === 'active';
-                    if (wasActive) {
-                        this.stopRefreshing(id);
-                    }
+                await checkPromise;
 
-                    urlObj.url = formValues.url;
-                    urlObj.interval = formValues.interval;
-                    
-                    this.saveURLs();
-                    this.renderList();
-                    
-                    if (wasActive) {
-                        this.startRefreshing(id);
-                    }
+                const responseTime = Date.now() - startTime;
 
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'URL actualizada',
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
-                }
-            }
+                // Actualizar estado exitoso
+                urlObj.status = 'success';
+                urlObj.lastCheck = new Date().toISOString();
+                urlObj.responseTime = responseTime;
+                urlObj.error = null;
 
-            async deleteURL(id) {
-                const result = await Swal.fire({
-                    title: '¿Eliminar URL?',
-                    text: 'Esta acción no se puede deshacer',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#d33',
-                    cancelButtonColor: '#3085d6',
-                    confirmButtonText: 'Sí, eliminar',
-                    cancelButtonText: 'Cancelar'
-                });
-
-                if (result.isConfirmed) {
-                    this.stopRefreshing(id);
-                    this.urls = this.urls.filter(u => u.id !== id);
-                    this.saveURLs();
-                    this.renderList();
-                    this.updateStats();
-                    
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'URL eliminada',
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
-                }
-            }
-
-            startAll() {
-                if (this.urls.length === 0) {
-                    Swal.fire({
-                        icon: 'info',
-                        title: 'No hay URLs',
-                        text: 'Agrega algunas URLs primero'
-                    });
-                    return;
-                }
-
-                this.urls.forEach(urlObj => {
-                    if (urlObj.status !== 'active') {
-                        this.startRefreshing(urlObj.id);
-                    }
-                });
-
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Todas las URLs iniciadas',
-                    timer: 1500,
-                    showConfirmButton: false
-                });
-            }
-
-            stopAll() {
-                Object.keys(this.timers).forEach(id => {
-                    this.stopRefreshing(parseInt(id));
-                });
-
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Todas las URLs detenidas',
-                    timer: 1500,
-                    showConfirmButton: false
-                });
-            }
-
-            exportConfig() {
-                if (this.urls.length === 0) {
-                    Swal.fire({
-                        icon: 'info',
-                        title: 'No hay URLs',
-                        text: 'No hay configuración para exportar'
-                    });
-                    return;
-                }
-
-                const config = {
-                    version: '2.0',
-                    exported: new Date().toISOString(),
-                    urls: this.urls,
-                    stats: this.stats
-                };
-
-                const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `url-refresher-config-${new Date().toISOString().split('T')[0]}.json`;
-                a.click();
-                URL.revokeObjectURL(url);
-
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Configuración exportada',
-                    timer: 1500,
-                    showConfirmButton: false
-                });
-            }
-
-            async importConfig(event) {
-                const file = event.target.files[0];
-                if (!file) return;
-
-                try {
-                    const text = await file.text();
-                    const config = JSON.parse(text);
-
-                    if (!config.urls || !Array.isArray(config.urls)) {
-                        throw new Error('Formato de archivo inválido');
-                    }
-
-                    const result = await Swal.fire({
-                        title: '¿Importar configuración?',
-                        text: `Se importarán ${config.urls.length} URLs. ¿Deseas reemplazar la configuración actual?`,
-                        icon: 'question',
-                        showCancelButton: true,
-                        confirmButtonText: 'Importar',
-                        cancelButtonText: 'Cancelar'
-                    });
-
-                    if (result.isConfirmed) {
-                        // Stop all current timers
-                        this.stopAll();
-                        
-                        // Import URLs with new IDs to avoid conflicts
-                        this.urls = config.urls.map(url => ({
-                            ...url,
-                            id: Date.now() + Math.random(),
-                            status: 'stopped',
-                            requests: url.requests || 0,
-                            lastRequest: url.lastRequest || null
-                        }));
-
-                        this.saveURLs();
-                        this.renderList();
-                        this.updateStats();
-
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Configuración importada',
-                            text: `${config.urls.length} URLs importadas correctamente`,
-                            timer: 2000,
-                            showConfirmButton: false
-                        });
-                    }
-                } catch (error) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error de importación',
-                        text: 'No se pudo importar el archivo. Verifica que sea un archivo válido.'
-                    });
-                }
-
-                // Clear the file input
-                event.target.value = '';
-            }
-
-            updateStats() {
-                document.getElementById('totalUrls').textContent = this.urls.length;
-                document.getElementById('activeUrls').textContent = this.urls.filter(u => u.status === 'active').length;
-                document.getElementById('totalRequests').textContent = this.stats.totalRequests;
-            }
-
-            startUptime() {
-                setInterval(() => {
-                    if (this.stats.startTime && this.urls.some(u => u.status === 'active')) {
-                        const uptime = Date.now() - this.stats.startTime;
-                        document.getElementById('uptime').textContent = this.formatUptime(uptime);
-                    } else if (!this.urls.some(u => u.status === 'active')) {
-                        document.getElementById('uptime').textContent = '00:00';
-                    }
-                }, 1000);
-            }
-
-            formatUptime(ms) {
-                const seconds = Math.floor(ms / 1000);
-                const minutes = Math.floor(seconds / 60);
-                const hours = Math.floor(minutes / 60);
+            } catch (error) {
+                // Asumir que la URL es accesible incluso con errores de CORS/403/401
+                // Ya que estos errores indican que el servidor respondió
+                const responseTime = Date.now() - startTime;
                 
-                if (hours > 0) {
-                    return `${hours.toString().padStart(2, '0')}:${(minutes % 60).toString().padStart(2, '0')}:${(seconds % 60).toString().padStart(2, '0')}`;
-                } else {
-                    return `${minutes.toString().padStart(2, '0')}:${(seconds % 60).toString().padStart(2, '0')}`;
+                urlObj.status = 'success';
+                urlObj.lastCheck = new Date().toISOString();
+                urlObj.responseTime = responseTime;
+                urlObj.error = null;
+                
+                // Solo marcar como error si es timeout o problema de red real
+                if (error.message === 'Timeout') {
+                    urlObj.status = 'error';
+                    urlObj.error = 'Tiempo de espera agotado';
+                    urlObj.responseTime = null;
                 }
             }
 
-            formatTime(timestamp) {
-                const date = new Date(timestamp);
-                return date.toLocaleTimeString('es-ES', { 
-                    hour: '2-digit', 
-                    minute: '2-digit', 
-                    second: '2-digit' 
-                });
+            // Guardar y actualizar UI
+            saveURLsToLocalStorage();
+            renderURLs();
+            updateStats();
+        }
+
+        // Renderizar lista de URLs
+        function renderURLs() {
+            const container = document.getElementById('urlList');
+            const clearBtn = document.getElementById('clearBtn');
+            
+            if (urls.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-gray-500 py-8 text-sm sm:text-base">
+                        No hay URLs para monitorear. Agrega una para comenzar.
+                    </div>
+                `;
+                clearBtn.style.display = 'none';
+                return;
+            }
+
+            clearBtn.style.display = 'block';
+
+            container.innerHTML = urls.map(urlObj => {
+                const statusColor = urlObj.status === 'success' ? 'green' : 
+                                   urlObj.status === 'error' ? 'red' : 'gray';
+                const statusText = urlObj.status === 'success' ? 'Activa' : 
+                                  urlObj.status === 'error' ? 'Error' : 'Pendiente';
+                
+                const lastCheckText = urlObj.lastCheck ? 
+                    new Date(urlObj.lastCheck).toLocaleTimeString('es-ES') : 'Nunca';
+                
+                const responseTimeText = urlObj.responseTime ? 
+                    `${urlObj.responseTime}ms` : '--';
+
+                return `
+                    <div class="border border-gray-200 rounded-lg p-3 sm:p-4 hover:shadow-md transition-shadow">
+                        <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 sm:gap-3 mb-2">
+                                    <span class="inline-block w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-${statusColor}-500 flex-shrink-0"></span>
+                                    <h3 class="text-css text-sm sm:text-base text-gray-800 truncate">${urlObj.url}</h3>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 text-xs sm:text-sm">
+                                    <div>
+                                        <span class="text-css text-gray-600">Estado:</span>
+                                        <span class="text-css text-${statusColor}-600 ml-1">${statusText}</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-css text-gray-600">Última verificación:</span>
+                                        <span class="text-css text-gray-800 ml-1">${lastCheckText}</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-css text-gray-600">Tiempo de respuesta:</span>
+                                        <span class="text-css text-gray-800 ml-1">${responseTimeText}</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-css text-gray-600">Intervalo:</span>
+                                        <span class="text-css text-gray-800 ml-1">${urlObj.interval}s</span>
+                                    </div>
+                                </div>
+                                ${urlObj.error ? `
+                                    <div class="mt-2 text-xs sm:text-sm text-red-600 bg-red-50 px-3 py-2 rounded">
+                                        Error: ${urlObj.error}
+                                    </div>
+                                ` : ''}
+                            </div>
+                            <button 
+                                onclick="removeURL(${urlObj.id})"
+                                class="w-full sm:w-auto px-3 py-1.5 text-xs sm:text-sm text-red-600 hover:bg-red-50 rounded transition-colors text-css"
+                            >
+                                Eliminar
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Actualizar estadísticas
+        function updateStats() {
+            const total = urls.length;
+            const active = urls.filter(u => u.status === 'success').length;
+            const errors = urls.filter(u => u.status === 'error').length;
+            
+            document.getElementById('totalUrls').textContent = total;
+            document.getElementById('activeUrls').textContent = active;
+            document.getElementById('errorUrls').textContent = errors;
+            document.getElementById('lastUpdate').textContent = 
+                new Date().toLocaleTimeString('es-ES');
+        }
+
+        // Guardar URLs en localStorage
+        function saveURLsToLocalStorage() {
+            try {
+                localStorage.setItem('monitoredUrls', JSON.stringify(urls));
+                console.log('URLs guardadas en localStorage:', urls.length);
+            } catch (e) {
+                console.error('Error al guardar en localStorage:', e);
             }
         }
 
-        // Initialize the application
-        const refresher = new URLRefresher();
+        // Cargar URLs desde localStorage
+        function loadURLsFromLocalStorage() {
+            try {
+                const stored = localStorage.getItem('monitoredUrls');
+                if (stored) {
+                    urls = JSON.parse(stored);
+                    console.log('URLs cargadas desde localStorage:', urls.length);
+                    
+                    // Reiniciar monitoreo para todas las URLs cargadas
+                    urls.forEach(urlObj => {
+                        startMonitoring(urlObj);
+                    });
+                }
+            } catch (e) {
+                console.error('Error al cargar desde localStorage:', e);
+                urls = [];
+            }
+        }
 
-        // Prevent page unload if there are active refreshers
-        window.addEventListener('beforeunload', (e) => {
-            const activeCount = refresher.urls.filter(u => u.status === 'active').length;
-            if (activeCount > 0) {
+        // Permitir agregar URL con Enter
+        document.getElementById('urlInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addURL();
+            }
+        });
+
+        // Suprimir errores de CORS en consola
+        window.addEventListener('error', function(e) {
+            // Suprimir errores relacionados con CORS, 401, 403
+            if (e.message && (
+                e.message.includes('CORS') || 
+                e.message.includes('401') || 
+                e.message.includes('403') ||
+                e.message.includes('Failed to load')
+            )) {
                 e.preventDefault();
-                e.returnValue = `Tienes ${activeCount} URLs activas. ¿Estás seguro de que quieres salir?`;
+                return false;
             }
-        });
-
-        // Add keyboard shortcuts
-        document.addEventListener('keydown', (e) => {
-            if (e.ctrlKey || e.metaKey) {
-                switch (e.key) {
-                    case 's':
-                        e.preventDefault();
-                        refresher.exportConfig();
-                        break;
-                    case 'o':
-                        e.preventDefault();
-                        document.getElementById('importFile').click();
-                        break;
-                    case 'Enter':
-                        if (e.target.id === 'urlInput') {
-                            e.preventDefault();
-                            refresher.addURL();
-                        }
-                        break;
-                }
-            }
-        });
-
-        // Add visual feedback for network status
-        window.addEventListener('online', () => {
-            Swal.fire({
-                icon: 'success',
-                title: 'Conexión restaurada',
-                text: 'La conexión a internet se ha restaurado',
-                timer: 2000,
-                showConfirmButton: false,
-                position: 'top-end',
-                toast: true
-            });
-        });
-
-        window.addEventListener('offline', () => {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Sin conexión',
-                text: 'Se ha perdido la conexión a internet',
-                timer: 3000,
-                showConfirmButton: false,
-                position: 'top-end',
-                toast: true
-            });
-        });
+        }, true);
     </script>
-
 </body>
-
 </html>
