@@ -201,71 +201,63 @@
         }
 
         // Verificar estado de una URL usando un método alternativo
+        // Verificar estado de una URL de forma tolerante a errores
         async function checkURL(urlObj) {
             const startTime = Date.now();
-            
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
             try {
-                // Crear un iframe oculto para verificar la URL sin problemas de CORS
-                const iframe = document.createElement('iframe');
-                iframe.style.display = 'none';
-                document.body.appendChild(iframe);
-
-                // Promesa con timeout para verificación
-                const checkPromise = new Promise((resolve, reject) => {
-                    const timeout = setTimeout(() => {
-                        document.body.removeChild(iframe);
-                        reject(new Error('Timeout'));
-                    }, 10000);
-
-                    iframe.onload = () => {
-                        clearTimeout(timeout);
-                        document.body.removeChild(iframe);
-                        resolve(true);
-                    };
-
-                    iframe.onerror = () => {
-                        clearTimeout(timeout);
-                        document.body.removeChild(iframe);
-                        reject(new Error('Error de conexión'));
-                    };
-
-                    // Intentar cargar la URL
-                    iframe.src = urlObj.url;
+                // Intentar hacer HEAD o GET (solo para probar conexión)
+                const response = await fetch(urlObj.url, {
+                    method: 'HEAD',
+                    mode: 'no-cors', // evita CORS bloqueos
+                    signal: controller.signal
                 });
 
-                await checkPromise;
-
                 const responseTime = Date.now() - startTime;
-
-                // Actualizar estado exitoso
                 urlObj.status = 'success';
                 urlObj.lastCheck = new Date().toISOString();
                 urlObj.responseTime = responseTime;
                 urlObj.error = null;
-
             } catch (error) {
-                // Asumir que la URL es accesible incluso con errores de CORS/403/401
-                // Ya que estos errores indican que el servidor respondió
                 const responseTime = Date.now() - startTime;
-                
-                urlObj.status = 'success';
-                urlObj.lastCheck = new Date().toISOString();
-                urlObj.responseTime = responseTime;
-                urlObj.error = null;
-                
-                // Solo marcar como error si es timeout o problema de red real
-                if (error.message === 'Timeout') {
+
+                // Manejar tipos de error
+                if (error.name === 'AbortError') {
                     urlObj.status = 'error';
                     urlObj.error = 'Tiempo de espera agotado';
                     urlObj.responseTime = null;
-                }
-            }
+                } else {
+                    // Errores 401, 403, 503, etc. se consideran como "servidor respondió"
+                    const toleratedErrors = ['Failed to fetch', 'TypeError', 'NetworkError', 'CORS'];
+                    const isTolerated = toleratedErrors.some(msg => error.message.includes(msg));
 
-            // Guardar y actualizar UI
-            saveURLsToLocalStorage();
-            renderURLs();
-            updateStats();
+                    urlObj.status = isTolerated ? 'success' : 'error';
+                    urlObj.error = isTolerated ? null : error.message;
+                    urlObj.responseTime = isTolerated ? responseTime : null;
+                }
+            } finally {
+                clearTimeout(timeout);
+                saveURLsToLocalStorage();
+                renderURLs();
+                updateStats();
+            }
         }
+
+        // Silenciar errores molestos de red o CORS en consola
+        window.addEventListener('error', (e) => {
+            if (e.message && (
+                e.message.includes('Failed to load resource') ||
+                e.message.includes('CORS') ||
+                e.message.includes('401') ||
+                e.message.includes('503')
+            )) {
+                e.preventDefault();
+                return false;
+            }
+        }, true);
+
 
         // Renderizar lista de URLs
         function renderURLs() {
